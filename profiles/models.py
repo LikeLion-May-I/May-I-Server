@@ -1,10 +1,24 @@
 from django.db import models
+from django.contrib.auth import get_user_model
 
 # Create your models here.
+User=get_user_model()
 
+# class User(AbstractUser):
+#     #id
+#     #username
+#     #password
+#     log_in = models.DateTimeField(auto_now_add=True)
+#     is_reporter = models.IntegerField(default=1, null=True,  blank=True)
+
+# class MyUser(models.Model):
+#     class meta:
+#         model = get_user_model()
+
+    
 class Profile(models.Model):
     #id
-    #user
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=20, null=True, blank=True)
     department = models.CharField(max_length=50, null=True, blank=True)
     category_id = models.IntegerField(null=True, blank=True)

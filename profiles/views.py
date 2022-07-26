@@ -2,10 +2,12 @@ from unicodedata import category
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from profiles.models import Profile
+from django.contrib.auth.models import update_last_login
 
 # Create your views here.
 def get_profile_one(request, id):
     if request.method == "GET":
+
 
         profile = get_object_or_404(Profile, pk=id)
 
@@ -22,6 +24,7 @@ def get_profile_one(request, id):
             "reply_time": profile.reply_time,
             "certification": profile.certification,
             "update_at": profile.update_at,
+            "last_login": profile.user.last_login,
         }
 
         return JsonResponse({
@@ -56,6 +59,7 @@ def get_profile_all(request, category_id):
                 "reply_time": profile.reply_time,
                 "certification": profile.certification,
                 "update_at": profile.update_at,
+                "last_login": profile.user.last_login,
             }
 
             profile_all_json.append(profile_json)
