@@ -4,7 +4,7 @@ from django.forms import DateTimeField
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 
-from models import *
+from .models import *
 
 # Create your views here.
 
