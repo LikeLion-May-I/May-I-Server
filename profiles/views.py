@@ -1,8 +1,11 @@
+from telnetlib import AUTHENTICATION
 from unicodedata import category
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from profiles.models import Profile
 from django.contrib.auth.models import update_last_login
+
+
 
 # Create your views here.
 def get_profile_one(request, id):
@@ -77,3 +80,22 @@ def get_profile_all(request, category_id):
         "message": "method error",
         "data": None
     })
+
+
+# from django.contrib.auth import authenticate, login, logout
+# from django.contrib.auth import get_user_model
+# from interviews.models import *
+
+
+# def read_interview_for_expert(request):
+#     user = authenticate(username="admin", password="1234")
+#     login(request, user)
+
+#     # # 원래
+#     # user = request.user
+
+#     # 진행
+
+    
+#     apply_all = Apply.objects.filter(user=user)
+    

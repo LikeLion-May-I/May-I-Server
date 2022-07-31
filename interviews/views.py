@@ -13,6 +13,7 @@ def create_interview(request):
         body = json.loads(request.body.decode('utf-8'))
         
         new_interview = Interview.objects.create(
+            # reporter = request.user
             title = body['title'],
             method = body['method'],
             body = body['body'],
@@ -173,7 +174,7 @@ def delete_interview(request, id):
 # 이 때는 설정해 둔 deadline과 별개로 따로 시간 counting은 하지 않습니다
 # 인터뷰 제안서가 넘어감과 동시에 apply가 생겨요
 
-def send_interview(request, id):
+def send_interview(request, id): # create_apply
     if request.method == "GET":
         
         send_interview = get_object_or_404(Interview, pk=id)
@@ -211,18 +212,19 @@ def send_interview(request, id):
 
 # expert가 수락/보류/거절 눌렀을 때 checkdate update + response 저장 + hold_reason까지 저장
 
-def checked_interview(request, id):
+def checked_interview(request, id): # update_apply
     if request.method == "PATCH":
         body = json.loads(request.body.decode('utf-8'))
         
         checked_interview = get_object_or_404(Interview, pk=id)
-        
+
         if checked_interview.is_expired == 0:
             apply = checked_interview.apply
             
             apply.check_date = timezone.now()
             apply.response = body['response']
             apply.hold_reason = body['hold_reason']
+            # 프론트에서 공백으로라도 보내주기!!
             
             apply.save()
             
@@ -241,6 +243,8 @@ def checked_interview(request, id):
                 'data' : apply_json
             })
 
+
+
         return JsonResponse({
             'status' : 200,
             'success' : True,
@@ -252,8 +256,8 @@ def checked_interview(request, id):
         
 # 시간 카운팅 함수 (제한시간 - 현재시간)
 
-def time_calc(id):
-    interview = get_object_or_404(Interview, pk=id)
+def time_calc():
+    interview = Interview.objects.all()
     
     if interview.is_send == 1:
         currtime = timezone.now()
