@@ -99,3 +99,8 @@ def get_profile_all(request, category_id):
     
 #     apply_all = Apply.objects.filter(user=user)
     
+
+
+
+
+    
