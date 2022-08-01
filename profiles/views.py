@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import generics, status
 from rest_framework.response import Response
 from django.contrib.auth.models import User
+from rest_framework.authtoken.models import Token
 
 from .serializers import RegisterSerializer, LoginSerializer, ProfileSerializer
 from .models import Profile
@@ -57,6 +58,11 @@ def get_profile_one(request, id):
 def get_profile_all(request, category_id):
     if request.method == "GET":
 
+        token_line = request.META.get('HTTP_AUTHORIZATION')
+        token = get_object_or_404(Token, key=token_line)
+        print(token.user.id)
+
+        
         profile_all = Profile.objects.filter(category_id=category_id)
 
         profile_all_json = []
