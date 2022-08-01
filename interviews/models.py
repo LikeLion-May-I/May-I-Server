@@ -14,7 +14,7 @@ class Interview(models.Model):
     is_expired = models.IntegerField(default=0, null=True, blank=True)
 
 class Apply(models.Model):
-    interview = models.OneToOneField(Interview, on_delete=models.CASCADE)
+    interview = models.OneToOneField(Interview, on_delete=models.CASCADE, null = True)
     send_date = models.DateTimeField(default="", null=True, blank=True)
     check_date = models.DateTimeField(default="", null=True, blank=True)
     response = models.IntegerField(default=0, null=True, blank=True)
