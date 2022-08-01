@@ -1,10 +1,13 @@
-from telnetlib import AUTHENTICATION
-from unicodedata import category
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from profiles.models import Profile
 from django.contrib.auth.models import update_last_login
 
+from rest_framework import generics
+from .serializers import RegisterSerializer
+from django.contrib.auth import get_user_model
+
+User=get_user_model()
 
 
 # Create your views here.
@@ -100,7 +103,9 @@ def get_profile_all(request, category_id):
 #     apply_all = Apply.objects.filter(user=user)
     
 
-
+class RegisterView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = RegisterSerializer
 
 
     
