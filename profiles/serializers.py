@@ -8,10 +8,10 @@ from .models import Profile
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(
-        required=True,
-        validators=[UniqueValidator(queryset=User.objects.all())],
-    )
+    # email = serializers.EmailField(
+    #     required=True,
+    #     validators=[UniqueValidator(queryset=User.objects.all())],
+    # )
     password = serializers.CharField(
         write_only=True,
         required=True,
@@ -21,7 +21,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username', 'password', 'password2', 'email')
+        fields = ('username', 'password', 'password2')
 
     def validate(self, data):
         if data['password'] != data['password2']:
@@ -58,5 +58,5 @@ class LoginSerializer(serializers.Serializer):
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ("nickname", "position", "subjects")
+        fields = ("name", "department", "background")
         # extra_kwargs = {"image": {"required": False, "allow_null": True}}
