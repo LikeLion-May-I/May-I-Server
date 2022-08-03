@@ -12,3 +12,4 @@ class InterviewAdmin(admin.ModelAdmin):
 class ApplyAdmin(admin.ModelAdmin):
     list_display = ['id', 'send_date', 'response']
     list_display_links = ['id']
+

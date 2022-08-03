@@ -257,7 +257,7 @@ def time_calc(id):
     
     if interview.is_send == 1:
         currtime = timezone.now()
-        time = interview.dealine - currtime
+        time = interview.deadline - currtime
         
         if time < 0 :
             interview.is_expired = 1
