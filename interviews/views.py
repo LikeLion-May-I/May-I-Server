@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 from time import timezone
 from django.forms import DateTimeField
@@ -13,7 +14,6 @@ def create_interview(request):
         body = json.loads(request.body.decode('utf-8'))
         
         new_interview = Interview.objects.create(
-            # reporter = request.user
             title = body['title'],
             method = body['method'],
             body = body['body'],
@@ -40,6 +40,7 @@ def create_interview(request):
             'message' : 'interview 생성 성공!',
             'data' : new_interview_json
         })
+
     return JsonResponse({
         'status' : 405,
         'success' : False,
@@ -174,17 +175,11 @@ def delete_interview(request, id):
 # 이 때는 설정해 둔 deadline과 별개로 따로 시간 counting은 하지 않습니다
 # 인터뷰 제안서가 넘어감과 동시에 apply가 생겨요
 
-def send_interview(request, id): # create_apply
+def send_interview(request, interview_id):
     if request.method == "GET":
         
-        send_interview = get_object_or_404(Interview, pk=id)
-        
-        send_interview.is_send = 1
-        send_interview.save()
-        
         new_apply = Apply.objects.create(
-            interview = send_interview,
-            send_date = timezone.now()
+            interview = get_object_or_404(Interview, pk=interview_id),
         )
         
         new_apply_json={
@@ -194,6 +189,9 @@ def send_interview(request, id): # create_apply
             "response" : new_apply.response,
             "hold_reason" : new_apply.hold_reason,
         }
+        
+        new_apply.interview.is_send = 1
+        new_apply.interview.save()
         
         return JsonResponse({
             'status' : 200,
@@ -212,19 +210,19 @@ def send_interview(request, id): # create_apply
 
 # expert가 수락/보류/거절 눌렀을 때 checkdate update + response 저장 + hold_reason까지 저장
 
-def checked_interview(request, id): # update_apply
+def checked_interview(request, id):
     if request.method == "PATCH":
         body = json.loads(request.body.decode('utf-8'))
         
         checked_interview = get_object_or_404(Interview, pk=id)
-
+        
         if checked_interview.is_expired == 0:
             apply = checked_interview.apply
             
-            apply.check_date = timezone.now()
+            apply.check_date = datetime.now()
             apply.response = body['response']
             apply.hold_reason = body['hold_reason']
-            # 프론트에서 공백으로라도 보내주기!!
+            # 프런트에서 공백으로라도 보내주기!!
             
             apply.save()
             
@@ -243,8 +241,6 @@ def checked_interview(request, id): # update_apply
                 'data' : apply_json
             })
 
-
-
         return JsonResponse({
             'status' : 200,
             'success' : True,
@@ -256,8 +252,8 @@ def checked_interview(request, id): # update_apply
         
 # 시간 카운팅 함수 (제한시간 - 현재시간)
 
-def time_calc():
-    interview = Interview.objects.all()
+def time_calc(id):
+    interview = get_object_or_404(Interview, pk=id)
     
     if interview.is_send == 1:
         currtime = timezone.now()
@@ -266,7 +262,39 @@ def time_calc():
         if time < 0 :
             interview.is_expired = 1
         else:
-            return time
-            
-    
-    
+            return time.seconds/3600
+
+def reply_rate(request):
+    if request.method == "GET":
+        interview_all = Interview.objects.all()
+        
+        totalNum = len(interview_all)
+        repliedNum = 0
+        
+        
+        for interview in interview_all:
+            if interview.apply.response != 0:
+                repliedNum += 1
+        
+        reply_rate = int(float(repliedNum / totalNum) * 100)
+        
+        reply_rate_json = {
+            "totalNum" : totalNum,
+            "repliedNum" : repliedNum,
+            "reply_rate" : reply_rate,
+        }
+        
+        return JsonResponse({
+            'status' : 200,
+            'success' : True,
+            'message' : '응답률 계산 성공',
+            'data' : reply_rate_json
+        })
+
+    return JsonResponse({
+        'status' : 405,
+        'success' : False,
+        'message' : 'method error : reply_rate',
+        'data' : None
+    })
+        

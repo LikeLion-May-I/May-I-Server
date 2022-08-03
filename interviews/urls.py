@@ -10,6 +10,7 @@ urlpatterns = [
     path('get-interview/<int:id>',get_interview, name="get-interview"),
     path('update-interview/<int:id>', update_interview, name="update-interview"),
     path('delete-interview/<int:id>', delete_interview, name="delete-interview"),
-    path('send-interview', send_interview, name="send-interview"),
-    path('checked-interview', checked_interview, name="checked-interview"),
+    path('send-interview/<int:interview_id>', send_interview, name="send-interview"),
+    path('checked-interview/<int:id>', checked_interview, name="checked-interview"),
+    path('reply-rate/', reply_rate, name="reply-rate"),
 ]
