@@ -1,16 +1,18 @@
-from telnetlib import AUTHENTICATION
-from unicodedata import category
+from time import time
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
+from interviews.models import Apply
 from profiles.models import Profile
-from django.contrib.auth.models import update_last_login
+from django.contrib.auth import get_user_model, authenticate, login, logout
+from interviews.views import *
+from django.utils import timezone
+from datetime import datetime
 
 
 
 # Create your views here.
 def get_profile_one(request, id):
     if request.method == "GET":
-
 
         profile = get_object_or_404(Profile, pk=id)
 
@@ -81,21 +83,122 @@ def get_profile_all(request, category_id):
         "data": None
     })
 
+# def time_calc_2(interview):
 
-# from django.contrib.auth import authenticate, login, logout
-# from django.contrib.auth import get_user_model
-# from interviews.models import *
+#     if interview.is_send == 1:
+#         currtime = datetime.now(timezone('Asia/Seoul')).replace(tzinfo=None)
+#         time = interview.deadline - currtime
+
+#         if time.minutes > 0:
+#             interview.is_expired = 1
+#         else:
+#             return time
 
 
-# def read_interview_for_expert(request):
-#     user = authenticate(username="admin", password="1234")
-#     login(request, user)
+def get_apply_request_all_for_expert(request):
+    if request.method == "GET":
 
-#     # # 원래
-#     # user = request.user
+        user = authenticate(username="sanbo", password="userexpert")
+        login(request, user)
 
-#     # 진행
-
+        apply_all = Apply.objects.filter(expert_user=user)
     
-#     apply_all = Apply.objects.filter(user=user)
+        apply_all_json = []
+
+        for apply in apply_all:
+
+            if apply.response == 0:
+
+                sender_profile = get_object_or_404(Profile, user=apply.interview.reporter_user)
+
+                apply_json = {
+                    "id": apply.id,
+                    "department": sender_profile.department,
+                    "title": apply.interview.title,
+                    # "deadline": time_calc_2(apply.interview),
+                    "status": apply.interview.is_expired
+                }
+
+                apply_all_json.append(apply_json)
+
+        return JsonResponse({
+            'status' : 200,
+            'success' : True,
+            'message' : '전문가 마이페이지 요청 인터뷰 불러오기 성공 !',
+            'data' : apply_all_json
+        })
+
+    return JsonResponse({
+        "status": 405,
+        "success" : False,
+        "message": "method error",
+        "data": None
+    })
+
+def get_apply_answered_all_for_expert(request):
+    if request.method == "GET":
+
+        user = authenticate(username="sanbo", password="userexpert")
+        login(request, user)
+
+        apply_all = Apply.objects.filter(expert_user=user)
     
+        apply_all_json = []
+
+        for apply in apply_all:
+            if apply.response > 0:
+                sender_profile = get_object_or_404(Profile, user=apply.interview.reporter_user)
+
+                apply_json = {
+                    "id": apply.id,
+                    "department": sender_profile.department,
+                    "title": apply.interview.title,
+                    "status": apply.response,
+                }
+                apply_all_json.append(apply_json)
+
+        return JsonResponse({
+            'status' : 200,
+            'success' : True,
+            'message' : '전문가 마이페이지 인터뷰 현황 불러오기 성공 !',
+            'data' : apply_all_json
+        })
+
+    return JsonResponse({
+        "status": 405,
+        "success" : False,
+        "message": "method error",
+        "data": None
+    })
+
+def get_apply_one_for_expert(request, id):
+
+    if request.method == "GET":
+
+        apply = get_object_or_404(Apply, pk=id)
+        interview = apply.interview
+    
+        interview_json={
+            "id" : interview.id,
+            "title" : interview.title,
+            "method" : interview.method,
+            "body" : interview.body,
+            "url" : interview.url,
+            "deadline" : interview.deadline,
+            "is_send" : interview.is_send,
+            "is_expired" : interview.is_expired,
+        }
+        
+        return JsonResponse({
+            'status' : 200,
+            'success' : True,
+            'message' : 'interview 수신 성공!',
+            'data' : interview_json
+        })
+        
+    return JsonResponse({
+        'status' : 405,
+        'success' : False,
+        'message' : 'method error : get_interview',
+        'data' : None
+    })
