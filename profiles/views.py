@@ -64,6 +64,8 @@ def get_profile_all(request, category_id):
     if request.method == "GET":
 
         token_line = request.META.get('HTTP_AUTHORIZATION')
+
+        # token_line = 너가 원하는 유저의 토큰 스트링으로 넣어두기
         token = get_object_or_404(Token, key=token_line)
         print(token.user.id)
 
