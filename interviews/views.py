@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, tzinfo, timedelta
 import json
 from time import timezone
 from django.forms import DateTimeField
@@ -248,6 +248,11 @@ def checked_interview(request, id):
             'data' : None
         })
             
+#timedelta 값 int로 바꿔주는 함수 - 이 함수로 바꿔주면 정수형들과 연산이 가능해요.
+
+def timedelta2int(td):
+    res = round(td.microseconds/float(1000000)) + (td.seconds + td.days * 24 * 3600)
+    return res
             
         
 # 시간 카운팅 함수 (제한시간 - 현재시간)
@@ -256,13 +261,17 @@ def time_calc(id):
     interview = get_object_or_404(Interview, pk=id)
     
     if interview.is_send == 1:
-        currtime = timezone.now()
-        time = interview.deadline - currtime
+        currtime = datetime.now()
+        time = interview.deadline.replace(tzinfo=None) - currtime
+        
+        time = timedelta2int(time)
         
         if time < 0 :
             interview.is_expired = 1
         else:
-            return time.seconds/3600
+            return time
+
+# 평균 응답률
 
 def reply_rate(request):
     if request.method == "GET":
@@ -297,4 +306,40 @@ def reply_rate(request):
         'message' : 'method error : reply_rate',
         'data' : None
     })
+
+# 평균 응답 시간
+
+def reply_time(request):
+    if request.method == "GET":
+        interview_all = Interview.objects.all()
+        
+        totalNum = len(interview_all)
+        totalTime = 0
+        
+        for interview in interview_all:
+            if interview.apply.response != 0:
+                totalTime += timedelta2int(interview.apply.check_date - interview.apply.send_date)
+        
+        reply_time = (totalTime / totalNum)/3600
+        
+        reply_time_json = {
+            "totalNum" : totalNum,
+            "totalTime" : totalTime,
+            "reply_time" : reply_time,
+        }
+        
+        return JsonResponse({
+            'status' : 200,
+            'success' : True,
+            "message" : "평균응답시간 계산 성공",
+            "data" : reply_time_json
+        })
+        
+    return JsonResponse({
+        'status' : 405,
+        'success' : False,
+        "message" : "method error : reply_time",
+        'data' : None,   
+    })
+                
         
