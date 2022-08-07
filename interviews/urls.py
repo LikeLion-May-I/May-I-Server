@@ -13,4 +13,5 @@ urlpatterns = [
     path('send-interview/<int:interview_id>', send_interview, name="send-interview"),
     path('checked-interview/<int:id>', checked_interview, name="checked-interview"),
     path('reply-rate/', reply_rate, name="reply-rate"),
+    path('reply-time/', reply_time, name="reply-time"),
 ]
