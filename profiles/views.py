@@ -1,3 +1,4 @@
+from email import header
 from time import time
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
@@ -63,13 +64,12 @@ def get_profile_one(request, id):
 def get_profile_all(request, category_id):
     if request.method == "GET":
 
-        token_line = request.META.get('HTTP_AUTHORIZATION')
+        # token_line = request.META.get('HTTP_AUTHORIZATION')
 
-        # token_line = 너가 원하는 유저의 토큰 스트링으로 넣어두기
-        token = get_object_or_404(Token, key=token_line)
-        print(token.user.id)
+        # # token_line = 너가 원하는 유저의 토큰 스트링으로 넣어두기
+        # token = get_object_or_404(Token, key=token_line)
+        # print(token.user.id)
 
-        
         profile_all = Profile.objects.filter(category_id=category_id)
 
         profile_all_json = []
@@ -119,10 +119,11 @@ def get_profile_all(request, category_id):
 def get_apply_request_all_for_expert(request):
     if request.method == "GET":
 
-        user = authenticate(username="sanbo", password="userexpert")
-        login(request, user)
+        token_line = request.META.get('HTTP_AUTHORIZATION')
 
-        apply_all = Apply.objects.filter(expert_user=user)
+        token = get_object_or_404(Token, key=token_line)
+
+        apply_all = Apply.objects.filter(expert_user=token.user)
     
         apply_all_json = []
 
@@ -159,10 +160,14 @@ def get_apply_request_all_for_expert(request):
 def get_apply_answered_all_for_expert(request):
     if request.method == "GET":
 
-        user = authenticate(username="sanbo", password="userexpert")
-        login(request, user)
+        # user = authenticate(username="sanbo", password="userexpert")
+        # login(request, user)
 
-        apply_all = Apply.objects.filter(expert_user=user)
+        token_line = request.META.get('HTTP_AUTHORIZATION')
+
+        token = get_object_or_404(Token, key=token_line)
+
+        apply_all = Apply.objects.filter(expert_user=token.user)
     
         apply_all_json = []
 
