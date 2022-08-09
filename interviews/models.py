@@ -19,6 +19,6 @@ class Apply(models.Model):
     expert_user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     interview = models.OneToOneField(Interview, on_delete=models.CASCADE, null=True, blank=True)
     send_date = models.DateTimeField(auto_now_add=True)
-    check_date = models.DateTimeField(default="", null=True, blank=True)
+    check_date = models.DateTimeField(null=True, blank=True)
     response = models.IntegerField(default=0, null=True, blank=True)
     hold_reason = models.CharField(max_length=150, null=True, blank=True)
