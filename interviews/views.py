@@ -4,16 +4,23 @@ from time import timezone
 from django.forms import DateTimeField
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
+import pytz
 
 from .models import *
+from rest_framework.authtoken.models import Token
 
 # Create your views here.
 
 def create_interview(request):
-    if request=="POST":
+    if request.method =="POST":
         body = json.loads(request.body.decode('utf-8'))
         
+        token_line = request.META.get('HTTP_AUTHORIZATION')
+        
+        token = get_object_or_404(Token, key=token_line)
+        
         new_interview = Interview.objects.create(
+            reporter_user = token.user,
             title = body['title'],
             method = body['method'],
             body = body['body'],
@@ -25,6 +32,7 @@ def create_interview(request):
         
         new_interview_json = {
             "id" : new_interview.id,
+            "reporter_user" : new_interview.reporter_user,
             "title" : new_interview.title,
             "method" : new_interview.method,
             "body" : new_interview.body,
@@ -47,6 +55,7 @@ def create_interview(request):
         'message' : 'method error : create_interview',
         'data' : None
     })
+
 
 def get_interview_all(request):
     if request.method == "GET":
@@ -94,6 +103,7 @@ def get_interview(request, id):
             "deadline" : interview.deadline,
             "is_send" : interview.is_send,
             "is_expired" : interview.is_expired,
+            "rest_time" : time_calc(id)
         }
         
         return JsonResponse({
@@ -174,16 +184,23 @@ def delete_interview(request, id):
 # 임시저장 -> 진짜 인터뷰 보내기
 # 이 때는 설정해 둔 deadline과 별개로 따로 시간 counting은 하지 않습니다
 # 인터뷰 제안서가 넘어감과 동시에 apply가 생겨요
+# 헤더에 expert 관련 정보를 줘야 합니다
 
 def send_interview(request, interview_id):
     if request.method == "GET":
         
+        token_line = request.META.get('HTTP_AUTHORIZATION')
+        token = get_object_or_404(Token, key=token_line)
+        
+        
         new_apply = Apply.objects.create(
+            expert_user = token.user,
             interview = get_object_or_404(Interview, pk=interview_id),
         )
         
         new_apply_json={
             "id" : new_apply.id,
+            "expert_user" : new_apply.expert_user,
             "send_date" : new_apply.send_date,
             "check_date" : new_apply.check_date,
             "response" : new_apply.response,
@@ -256,14 +273,18 @@ def timedelta2int(td):
             
         
 # 시간 카운팅 함수 (제한시간 - 현재시간)
+# 초 단위 출력
 
 def time_calc(id):
     interview = get_object_or_404(Interview, pk=id)
     
     if interview.is_send == 1:
-        currtime = datetime.now()
-        time = interview.deadline.replace(tzinfo=None) - currtime
+        KST = pytz.timezone('Asia/Seoul')
         
+        currtime = datetime.now().astimezone(KST)
+        deadline = interview.deadline.astimezone(KST)
+        
+        time = deadline - currtime
         time = timedelta2int(time)
         
         if time < 0 :
@@ -271,18 +292,21 @@ def time_calc(id):
         else:
             return time
 
-# 평균 응답률
+# 평균 응답률 - 전문가에 따름
 
 def reply_rate(request):
     if request.method == "GET":
-        interview_all = Interview.objects.all()
+        token_line = request.META.get('HTTP_AUTHORIZATION')
+        token = get_object_or_404(Token, key=token_line)
         
-        totalNum = len(interview_all)
+        apply_all = Apply.objects.filter(expert_user=token.user)
+        
+        totalNum = len(apply_all)
         repliedNum = 0
         
         
-        for interview in interview_all:
-            if interview.apply.response != 0:
+        for apply in apply_all:
+            if apply.response != 0:
                 repliedNum += 1
         
         reply_rate = int(float(repliedNum / totalNum) * 100)
@@ -307,23 +331,28 @@ def reply_rate(request):
         'data' : None
     })
 
-# 평균 응답 시간
+# 평균 응답 시간 - 전문가에 따름
+# totalTime - 초 단위
 
 def reply_time(request):
     if request.method == "GET":
-        interview_all = Interview.objects.all()
+        token_line = request.META.get('HTTP_AUTHORIZATION')
+        token = get_object_or_404(Token, key=token_line)
         
-        totalNum = len(interview_all)
+        apply_all = Apply.objects.filter(expert_user=token.user)
+        
+        repliedNum = 0
         totalTime = 0
         
-        for interview in interview_all:
-            if interview.apply.response != 0:
-                totalTime += timedelta2int(interview.apply.check_date - interview.apply.send_date)
+        for apply in apply_all:
+            if apply.response != 0:
+                repliedNum += 1
+                totalTime += timedelta2int(apply.check_date - apply.send_date)
         
-        reply_time = (totalTime / totalNum)/3600
+        reply_time = (totalTime / repliedNum)/3600
         
         reply_time_json = {
-            "totalNum" : totalNum,
+            "totalNum" : repliedNum,
             "totalTime" : totalTime,
             "reply_time" : reply_time,
         }
