@@ -1,5 +1,6 @@
 from datetime import datetime, tzinfo, timedelta
 import json
+from re import A
 from time import timezone
 from django.forms import DateTimeField
 from django.http import JsonResponse
@@ -7,6 +8,7 @@ from django.shortcuts import get_object_or_404, render
 import pytz
 
 from .models import *
+from profiles.models import *
 from rest_framework.authtoken.models import Token
 
 # Create your views here.
@@ -289,47 +291,40 @@ def time_calc(id):
         
         if time < 0 :
             interview.is_expired = 1
+            # apply = interview.apply
+            # expert_profile = get_object_or_404(Profile, user=apply.expert_user)
+            # expert_profile.reply_rate = reply_rate(apply.expert_user)
+            # expert_profile.save()
+            return 0
         else:
             return time
 
 # 평균 응답률 - 전문가에 따름
 
-def reply_rate(request):
-    if request.method == "GET":
-        token_line = request.META.get('HTTP_AUTHORIZATION')
-        token = get_object_or_404(Token, key=token_line)
-        
-        apply_all = Apply.objects.filter(expert_user=token.user)
-        
-        totalNum = len(apply_all)
-        repliedNum = 0
-        
-        
-        for apply in apply_all:
+def reply_rate(id):
+   
+    expert = get_object_or_404(User, pk=id)
+
+    apply_all = Apply.objects.filter(expert_user=expert)
+    
+    totalNum = 0
+    repliedNum = 0
+    for apply in apply_all:
+        if apply.interview.is_expired == 1:
+            totalNum += 1
             if apply.response != 0:
                 repliedNum += 1
-        
-        reply_rate = int(float(repliedNum / totalNum) * 100)
-        
-        reply_rate_json = {
-            "totalNum" : totalNum,
-            "repliedNum" : repliedNum,
-            "reply_rate" : reply_rate,
-        }
-        
-        return JsonResponse({
-            'status' : 200,
-            'success' : True,
-            'message' : '응답률 계산 성공',
-            'data' : reply_rate_json
-        })
 
-    return JsonResponse({
-        'status' : 405,
-        'success' : False,
-        'message' : 'method error : reply_rate',
-        'data' : None
-    })
+
+    
+
+        
+        
+    
+    reply_rate = int(float(repliedNum / totalNum) * 100)
+    
+    return reply_rate
+
 
 # 평균 응답 시간 - 전문가에 따름
 # totalTime - 초 단위
