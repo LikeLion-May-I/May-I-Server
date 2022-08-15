@@ -1,14 +1,10 @@
-from email import header
-from time import time
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from interviews.models import Apply
 
 from profiles.models import Profile
-from django.contrib.auth import get_user_model, authenticate, login, logout
+from django.contrib.auth import get_user_model
 from interviews.views import *
-from django.utils import timezone
-from datetime import datetime
 
 from rest_framework import generics
 from .serializers import RegisterSerializer

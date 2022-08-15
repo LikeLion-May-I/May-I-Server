@@ -1,12 +1,7 @@
-from datetime import datetime, tzinfo, timedelta
+from datetime import datetime
 import json
-from re import A
-from time import timezone
-from webbrowser import get
-from django.forms import DateTimeField
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render
-import pytz
+from django.shortcuts import get_object_or_404
 from profiles.models import Profile, User
 
 from .models import *
@@ -17,37 +12,24 @@ from rest_framework.authtoken.models import Token
 
 def create_interview(request, id):
     if request.method =="POST":
-        body = json.loads(request.body.decode('utf-8'))
         
         token_line = request.META.get('HTTP_AUTHORIZATION')
         token = get_object_or_404(Token, key=token_line)
         
         expert_user = get_object_or_404(User, pk=id)
         
+
         new_interview = Interview.objects.create(
             reporter_user = token.user,
             expert_name = expert_user.profile.name,
-            title = body['title'],
-            method = body['method'],
-            body = body['body'],
-            url = body['url'],
-            deadline = body['deadline'],
-            is_send = body['is_send'],
-            is_expired = body['is_expired'],
             expert_id = id,
         )
         
         new_interview_json = {
             "id" : new_interview.id,
-            "reporter_user" : new_interview.reporter_user,
-            "expert_name" : new_interview.expert_name,
-            "title" : new_interview.title,
-            "method" : new_interview.method,
-            "body" : new_interview.body,
-            "url" : new_interview.url,
-            "deadline" : new_interview.deadline,
-            "is_send" : new_interview.is_send,
-            "is_expired" : new_interview.is_expired,
+            "reporter_user" : new_interview.reporter_user.profile.name,
+            "expert_name"   : new_interview.expert_name,
+            "expert_id"     : id,
         }
         
         return JsonResponse({
@@ -67,22 +49,28 @@ def create_interview(request, id):
 
 def get_interview_all(request):
     if request.method == "GET":
-        interview_all = Interview.objects.all()
         
+        token_line = request.META.get('HTTP_AUTHORIZATION')
+        token = get_object_or_404(Token, key=token_line)
+        
+        interview_all = Interview.objects.all()
         interview_json_all = []
         
         for interview in interview_all:
-            interview_json={
-                "id" : interview.id,
-                "reporter_user" : interview.reporter_user,
-                "expert_name" : interview.expert_name,
-                "title" : interview.title,
-                "method" : interview.method,
-                "body" : interview.body,
-                "url" : interview.url,
-                "deadline" : interview.deadline,
-                "is_send" : interview.is_send,
-                "is_expired" : interview.is_expired,
+            interview_json=interview_json = {
+                "id"            : interview.id,
+                "reporter_user" : interview.reporter_user.profile.name,
+                "is_report"     : token.user.profile.is_report,
+                "expert_name"   : interview.expert_name,
+                "title"         : interview.title,
+                "purpose"       : interview.purpose,
+                "method"        : interview.method,
+                "amount"        : interview.amount,
+                "body"          : interview.body,
+                "url"           : interview.url,
+                "deadline"      : interview.deadline,
+                "is_send"       : interview.is_send,
+                "is_expired"    : interview.is_expired,
             }
             interview_json_all.append(interview_json)
         
@@ -102,19 +90,27 @@ def get_interview_all(request):
     
 def get_interview(request, id):
     if request.method == "GET":
+
+        token_line = request.META.get('HTTP_AUTHORIZATION')
+        token = get_object_or_404(Token, key=token_line)
+        
         interview= get_object_or_404(Interview, pk=id)
         
-        interview_json={
-            "id" : interview.id,
-            "reporter_user" : interview.reporter_user,
-            "expert_name" : interview.expert_name,
-            "title" : interview.title,
-            "method" : interview.method,
-            "body" : interview.body,
-            "url" : interview.url,
-            "deadline" : interview.deadline,
-            "is_send" : interview.is_send,
-            "is_expired" : interview.is_expired,
+
+        interview_json = {
+            "id"            : interview.id,
+            "reporter_user" : interview.reporter_user.profile.name,
+            "is_report"     : token.user.profile.is_report,
+            "expert_name"   : interview.expert_name,
+            "title"         : interview.title,
+            "purpose"       : interview.purpose,
+            "method"        : interview.method,
+            "amount"        : interview.amount,
+            "body"          : interview.body,
+            "url"           : interview.url,
+            "deadline"      : interview.deadline,
+            "is_send"       : interview.is_send,
+            "is_expired"    : interview.is_expired,
         }
         
         return JsonResponse({
@@ -137,28 +133,35 @@ def update_interview(request, id):
         
         update_interview = get_object_or_404(Interview, pk=id)
         
-        update_interview.title = body['title']
-        update_interview.method = body['method']
-        update_interview.body = body['body']
-        update_interview.url = body['url']
-        update_interview.deadline = body['deadline']
-        update_interview.is_send = body['is_send']
-        update_interview.is_expired = body=['is_send']
-        update_interview.is_expired = body['is_expired']
-        
+        if request.FILES:
+            file = request.FILES['file']
+
+        update_interview.title = body['title'],
+        update_interview.purpose = body['purpose'],
+        update_interview.method = body['method'],
+        update_interview.amount = body['amount'],
+        update_interview.body = body['body'],
+        update_interview.file = file,
+        update_interview.url = body['url'],
+        update_interview.deadline = body['deadline'],
+        update_interview.is_send = body['is_send'],
+        update_interview.is_expired = body['is_expired'],
+
         update_interview.save()
         
         update_interview_json = {
-            "id" : update_interview.id,
+            "id"            : update_interview.id,
             "reporter_user" : update_interview.reporter_user,
-            "expert_name" : update_interview.expert_name,
-            "title" : update_interview.title,
-            "method" : update_interview.method,
-            "body" : update_interview.body,
-            "url" : update_interview.url,
-            "deadline" : update_interview.deadline,
-            "is_send" : update_interview.is_send,
-            "is_expired" : update_interview.is_expired,
+            "expert_name"   : update_interview.expert_name,
+            "title"         : update_interview.title,
+            "purpose"       : update_interview.purpose,
+            "method"        : update_interview.method,
+            "amount"        : update_interview.amount,
+            "body"          : update_interview.body,
+            "url"           : update_interview.url,
+            "deadline"      : update_interview.deadline,
+            "is_send"       : update_interview.is_send,
+            "is_expired"    : update_interview.is_expired,
         }
         
         return JsonResponse({
