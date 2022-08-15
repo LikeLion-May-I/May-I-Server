@@ -143,7 +143,7 @@ def update_interview(request, id):
       
         update_interview.title = body['title']
         update_interview.purpose = body['purpose']
-        # update_interview.method = body['method']
+        update_interview.method = body['method']
         update_interview.amount = body['amount']
         update_interview.body = body['body']
         update_interview.file = file
