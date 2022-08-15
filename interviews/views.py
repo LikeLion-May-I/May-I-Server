@@ -34,12 +34,11 @@ def create_interview(request, id):
             deadline = body['deadline'],
             is_send = body['is_send'],
             is_expired = body['is_expired'],
-            expert_id = id,
+            expert_id = id
         )
         
         new_interview_json = {
             "id" : new_interview.id,
-            "reporter_user" : new_interview.reporter_user,
             "expert_name" : new_interview.expert_name,
             "title" : new_interview.title,
             "method" : new_interview.method,
@@ -74,7 +73,6 @@ def get_interview_all(request):
         for interview in interview_all:
             interview_json={
                 "id" : interview.id,
-                "reporter_user" : interview.reporter_user,
                 "expert_name" : interview.expert_name,
                 "title" : interview.title,
                 "method" : interview.method,
@@ -106,7 +104,6 @@ def get_interview(request, id):
         
         interview_json={
             "id" : interview.id,
-            "reporter_user" : interview.reporter_user,
             "expert_name" : interview.expert_name,
             "title" : interview.title,
             "method" : interview.method,
@@ -142,15 +139,11 @@ def update_interview(request, id):
         update_interview.body = body['body']
         update_interview.url = body['url']
         update_interview.deadline = body['deadline']
-        update_interview.is_send = body['is_send']
-        update_interview.is_expired = body=['is_send']
-        update_interview.is_expired = body['is_expired']
         
         update_interview.save()
         
         update_interview_json = {
             "id" : update_interview.id,
-            "reporter_user" : update_interview.reporter_user,
             "expert_name" : update_interview.expert_name,
             "title" : update_interview.title,
             "method" : update_interview.method,
@@ -202,16 +195,16 @@ def delete_interview(request, id):
 def send_interview(request, interview_id):
     if request.method == "POST":
         
-        send_interview = get_object_or_404(Interview, pk=interview_id),
+        send_interview = get_object_or_404(Interview, pk=interview_id)
         
         new_apply = Apply.objects.create(
             interview = send_interview,
-            expert_user = get_object_or_404(User, id=send_interview.expert_id),
+            expert_user = get_object_or_404(User, pk=send_interview.expert_id),
         )
         
         new_apply_json={
             "id" : new_apply.id,
-            "expert_user" : new_apply.expert_user,
+            # "expert_user" : new_apply.expert_user,
             "send_date" : new_apply.send_date,
             "check_date" : new_apply.check_date,
             "response" : new_apply.response,
@@ -272,8 +265,8 @@ def checked_interview(request, id):
             })
 
         return JsonResponse({
-            'status' : 200,
-            'success' : True,
+            'status' : 400,
+            'success' : False,
             'message' : 'is_expired == True',
             'data' : None
         })
@@ -288,7 +281,7 @@ def timedelta2int(td):
 # deadline - 현재시간 == 0 : 인터뷰 상태, 응답률, 응답시간 업데이트
 
 def update_reply(request, id):
-    if request.method == "POST":
+    if request.method == "PATCH":
         interview = get_object_or_404(Interview, pk=id)
     
         interview.is_expired == 1
@@ -315,7 +308,6 @@ def reply_rate(id):
 
             if apply.response != 0:
                 repliedNum += 1
-        
     
     reply_rate = int(float(repliedNum / totalNum) * 100)
     
