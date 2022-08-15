@@ -1,14 +1,10 @@
-from email import header
-from time import time
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from interviews.models import Apply
 
 from profiles.models import Profile
-from django.contrib.auth import get_user_model, authenticate, login, logout
+from django.contrib.auth import get_user_model
 from interviews.views import *
-from django.utils import timezone
-from datetime import datetime
 
 from rest_framework import generics
 from .serializers import RegisterSerializer
@@ -64,12 +60,6 @@ def get_profile_one(request, id):
 def get_profile_all(request, category_id):
     if request.method == "GET":
 
-        # token_line = request.META.get('HTTP_AUTHORIZATION')
-
-        # # token_line = 너가 원하는 유저의 토큰 스트링으로 넣어두기
-        # token = get_object_or_404(Token, key=token_line)
-        # print(token.user.id)
-
         profile_all = Profile.objects.filter(category_id=category_id)
 
         profile_all_json = []
@@ -104,17 +94,6 @@ def get_profile_all(request, category_id):
         "data": None
     })
 
-# def time_calc_2(interview):
-
-#     if interview.is_send == 1:
-#         currtime = datetime.now(timezone('Asia/Seoul')).replace(tzinfo=None)
-#         time = interview.deadline - currtime
-
-#         if time.minutes > 0:
-#             interview.is_expired = 1
-#         else:
-#             return time
-
 
 def get_apply_request_all_for_expert(request):
     if request.method == "GET":
@@ -137,7 +116,7 @@ def get_apply_request_all_for_expert(request):
                     "id": apply.id,
                     "department": sender_profile.department,
                     "title": apply.interview.title,
-                    # "deadline": time_calc_2(apply.interview),
+                    "deadline": apply.interview.deadline,
                     "status": apply.interview.is_expired
                 }
 
@@ -159,9 +138,6 @@ def get_apply_request_all_for_expert(request):
 
 def get_apply_answered_all_for_expert(request):
     if request.method == "GET":
-
-        # user = authenticate(username="sanbo", password="userexpert")
-        # login(request, user)
 
         token_line = request.META.get('HTTP_AUTHORIZATION')
 
