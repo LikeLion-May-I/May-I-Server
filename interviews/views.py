@@ -24,12 +24,18 @@ def create_interview(request, id):
         
         expert_user = get_object_or_404(User, pk=id)
         
+        if request.FILES:
+            file = request.FILES['file']
+
         new_interview = Interview.objects.create(
             reporter_user = token.user,
             expert_name = expert_user.profile.name,
             title = body['title'],
+            purpose = body['purpose'],
             method = body['method'],
+            amount = body['amount'],
             body = body['body'],
+            file = file,
             url = body['url'],
             deadline = body['deadline'],
             is_send = body['is_send'],
