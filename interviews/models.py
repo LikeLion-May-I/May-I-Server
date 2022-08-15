@@ -6,6 +6,7 @@ from profiles.models import User
 
 class Interview(models.Model):
     reporter_user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    expert_name = models.CharField(max_length=50, null=True, blank=True)
     title = models.CharField(max_length=50, null=True, blank=True)
     method = models.IntegerField(null=True, blank=True)
     body = models.CharField(max_length=500, null=True, blank=True)
@@ -14,6 +15,7 @@ class Interview(models.Model):
     deadline = models.DateTimeField(null=True, blank=True)
     is_send = models.IntegerField(default=0, null=True, blank=True)
     is_expired = models.IntegerField(default=0, null=True, blank=True)
+    expert_id = models.IntegerField(null=True, blank=True)
 
 class Apply(models.Model):
     expert_user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
