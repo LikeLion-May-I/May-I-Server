@@ -8,9 +8,11 @@ class Interview(models.Model):
     reporter_user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     expert_name = models.CharField(max_length=50, null=True, blank=True)
     title = models.CharField(max_length=50, null=True, blank=True)
+    purpose = models.CharField(max_length=50, null=True, blank=True)
     method = models.IntegerField(null=True, blank=True)
+    amount = models.CharField(max_length=20, null=True, blank=True)
     body = models.CharField(max_length=500, null=True, blank=True)
-    # filefield
+    file = models.FileField(upload_to="interview/", blank=True, null=True)
     url = models.URLField(max_length=500, null=True, blank=True)
     deadline = models.DateTimeField(null=True, blank=True)
     is_send = models.IntegerField(default=0, null=True, blank=True)
