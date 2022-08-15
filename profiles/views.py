@@ -3,8 +3,9 @@ from django.shortcuts import get_object_or_404
 from interviews.models import Apply
 
 from profiles.models import Profile
-from django.contrib.auth import get_user_model
 from interviews.views import *
+
+from django.contrib.auth import authenticate, login, logout
 
 from rest_framework import generics
 from .serializers import RegisterSerializer
@@ -31,7 +32,7 @@ def get_profile_one(request, id):
             "id": profile.id,
             "name": profile.name,
             "department": profile.department,
-            "img": str(profile.img),
+            "img": "/media/"+str(profile.img),
             "background": profile.background,
             "office": profile.office,
             "phone": profile.phone,
@@ -69,7 +70,7 @@ def get_profile_all(request, category_id):
                 "id": profile.id,
                 "name": profile.name,
                 "department": profile.department,
-                "img": str(profile.img),
+                "img": "/media/"+str(profile.img),
                 "tag": profile.tag,
                 "reply_rate": profile.reply_rate,
                 "reply_time": profile.reply_time,
@@ -212,6 +213,24 @@ def get_apply_one_for_expert(request, id):
 #######################drf#############################
 #######################################################
 
+def logout(request):
+    token_line = request.META.get('HTTP_AUTHORIZATION')
+    token = get_object_or_404(Token, key=token_line)
+    if token.user.is_authenticated:
+        # logout(request)
+        return JsonResponse({
+            'status' : 200,
+            'success' : True,
+            'message' : '로그아웃 성공!',
+            
+        })
+    return JsonResponse({
+        'status' : 400,
+        'success' : False,
+        'message' : '이미 로그아웃 되었습니다!',
+        
+    })
+
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -226,7 +245,8 @@ class LoginView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         token = serializer.validated_data
-        return Response({"token": token.key}, status=status.HTTP_200_OK)
+        login(request, token.user)
+        return Response({"token": token.key, "profile_name":token.user.profile.name }, status=status.HTTP_200_OK)
 
 
 class ProfileView(generics.GenericAPIView):
