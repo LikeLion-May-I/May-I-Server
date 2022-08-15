@@ -26,6 +26,8 @@ class Profile(models.Model):
     is_email_open = models.IntegerField(default=1, null=True, blank=True)
     is_phone_open = models.IntegerField(default=1, null=True, blank=True)
 
+    def __str__(self):
+        return str(self.user.id) + "/" + self.user.username
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
