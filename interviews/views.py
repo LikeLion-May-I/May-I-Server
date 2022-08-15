@@ -5,6 +5,7 @@ from django.forms import DateTimeField
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 import pytz
+from profiles.models import Profile, User
 
 from .models import *
 from rest_framework.authtoken.models import Token
@@ -16,7 +17,6 @@ def create_interview(request):
         body = json.loads(request.body.decode('utf-8'))
         
         token_line = request.META.get('HTTP_AUTHORIZATION')
-        
         token = get_object_or_404(Token, key=token_line)
         
         new_interview = Interview.objects.create(
@@ -103,7 +103,6 @@ def get_interview(request, id):
             "deadline" : interview.deadline,
             "is_send" : interview.is_send,
             "is_expired" : interview.is_expired,
-            "rest_time" : time_calc(id)
         }
         
         return JsonResponse({
@@ -191,7 +190,6 @@ def send_interview(request, interview_id):
         
         token_line = request.META.get('HTTP_AUTHORIZATION')
         token = get_object_or_404(Token, key=token_line)
-        
         
         new_apply = Apply.objects.create(
             expert_user = token.user,
@@ -294,12 +292,11 @@ def time_calc(id):
 
 # 평균 응답률 - 전문가에 따름
 
-def reply_rate(request):
+def reply_rate(request, id):
     if request.method == "GET":
-        token_line = request.META.get('HTTP_AUTHORIZATION')
-        token = get_object_or_404(Token, key=token_line)
+        user = get_object_or_404(User, pk=id)
         
-        apply_all = Apply.objects.filter(expert_user=token.user)
+        apply_all = Apply.objects.filter(expert_user=user)
         
         totalNum = len(apply_all)
         repliedNum = 0
@@ -334,12 +331,10 @@ def reply_rate(request):
 # 평균 응답 시간 - 전문가에 따름
 # totalTime - 초 단위
 
-def reply_time(request):
+def reply_time(request, id):
     if request.method == "GET":
-        token_line = request.META.get('HTTP_AUTHORIZATION')
-        token = get_object_or_404(Token, key=token_line)
-        
-        apply_all = Apply.objects.filter(expert_user=token.user)
+        user = get_object_or_404(User, pk=id)
+        apply_all = Apply.objects.filter(expert_user=user)
         
         repliedNum = 0
         totalTime = 0
