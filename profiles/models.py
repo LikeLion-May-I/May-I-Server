@@ -10,6 +10,7 @@ User=get_user_model()
     
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
+    is_report = models.IntegerField(default = 1, null=True, blank=True)
     name = models.CharField(max_length=20, null=True, blank=True)
     department = models.CharField(max_length=50, null=True, blank=True)
     category_id = models.IntegerField(null=True, blank=True)
