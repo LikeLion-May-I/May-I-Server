@@ -1,6 +1,6 @@
-from datetime import datetime
 import json
-from xmlrpc.client import DateTime
+from datetime import datetime
+from django.utils import timezone
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from profiles.models import Profile, User
