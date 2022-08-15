@@ -57,6 +57,7 @@ def get_interview_all(request):
         interview_json_all = []
         
         for interview in interview_all:
+
             interview_json=interview_json = {
                 "id"            : interview.id,
                 "reporter_user" : interview.reporter_user.profile.name,
@@ -96,6 +97,7 @@ def get_interview(request, id):
         
         interview= get_object_or_404(Interview, pk=id)
         
+
 
         interview_json = {
             "id"            : interview.id,
@@ -205,16 +207,16 @@ def delete_interview(request, id):
 def send_interview(request, interview_id):
     if request.method == "POST":
         
-        send_interview = get_object_or_404(Interview, pk=interview_id),
+        send_interview = get_object_or_404(Interview, pk=interview_id)
         
         new_apply = Apply.objects.create(
             interview = send_interview,
-            expert_user = get_object_or_404(User, id=send_interview.expert_id),
+            expert_user = get_object_or_404(User, pk=send_interview.expert_id),
         )
         
         new_apply_json={
             "id" : new_apply.id,
-            "expert_user" : new_apply.expert_user,
+            # "expert_user" : new_apply.expert_user,
             "send_date" : new_apply.send_date,
             "check_date" : new_apply.check_date,
             "response" : new_apply.response,
@@ -275,8 +277,8 @@ def checked_interview(request, id):
             })
 
         return JsonResponse({
-            'status' : 200,
-            'success' : True,
+            'status' : 400,
+            'success' : False,
             'message' : 'is_expired == True',
             'data' : None
         })
@@ -291,7 +293,7 @@ def timedelta2int(td):
 # deadline - 현재시간 == 0 : 인터뷰 상태, 응답률, 응답시간 업데이트
 
 def update_reply(request, id):
-    if request.method == "POST":
+    if request.method == "PATCH":
         interview = get_object_or_404(Interview, pk=id)
     
         interview.is_expired == 1
@@ -318,7 +320,6 @@ def reply_rate(id):
 
             if apply.response != 0:
                 repliedNum += 1
-        
     
     reply_rate = int(float(repliedNum / totalNum) * 100)
     
