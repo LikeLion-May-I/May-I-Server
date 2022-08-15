@@ -131,29 +131,30 @@ def get_interview(request, id):
     
 def update_interview(request, id):
     if request.method == "POST":
-        print(request.body)
-        body = json.loads(request.body.decode('utf-8'))
+        
+        # 이미지 파일이 있으므로 request에서 구분하여 받기
+        body =  request.POST
+        if request.FILES:
+            file = request.FILES['file']
+        else : file = None
+
         
         update_interview = get_object_or_404(Interview, pk=id)
-        
-        if request.FILES:
-             update_interview.file = request.FILES['file']
       
         update_interview.title = body['title']
         update_interview.purpose = body['purpose']
-        update_interview.method = body['method']
+        # update_interview.method = body['method']
         update_interview.amount = body['amount']
         update_interview.body = body['body']
-       
+        update_interview.file = file
         update_interview.url = body['url']
         update_interview.deadline = body['deadline']
-        
 
         update_interview.save()
         
         update_interview_json = {
             "id"            : update_interview.id,
-            "reporter_user" : update_interview.reporter_user,
+            "reporter_user" : update_interview.reporter_user.profile.name,
             "expert_name"   : update_interview.expert_name,
             "title"         : update_interview.title,
             "purpose"       : update_interview.purpose,
