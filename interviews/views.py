@@ -1,9 +1,11 @@
+from datetime import datetime, tzinfo, timedelta
 import json
-from datetime import datetime
-from django.utils import timezone
+from re import A
+from time import timezone
+from django.forms import DateTimeField
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
-from profiles.models import Profile, User
+from django.shortcuts import get_object_or_404, render
+import pytz
 
 from .models import *
 from profiles.models import *
@@ -11,26 +13,35 @@ from rest_framework.authtoken.models import Token
 
 # Create your views here.
 
-def create_interview(request, id):
+def create_interview(request):
     if request.method =="POST":
+        body = json.loads(request.body.decode('utf-8'))
         
         token_line = request.META.get('HTTP_AUTHORIZATION')
+        
         token = get_object_or_404(Token, key=token_line)
         
-        expert_user = get_object_or_404(User, pk=id)
-        
-
         new_interview = Interview.objects.create(
             reporter_user = token.user,
-            expert_name = expert_user.profile.name,
-            expert_id = id,
+            title = body['title'],
+            method = body['method'],
+            body = body['body'],
+            url = body['url'],
+            deadline = body['deadline'],
+            is_send = body['is_send'],
+            is_expired = body['is_expired']
         )
         
         new_interview_json = {
             "id" : new_interview.id,
-            "reporter_user" : new_interview.reporter_user.profile.name,
-            "expert_name"   : new_interview.expert_name,
-            "expert_id"     : id,
+            "reporter_user" : new_interview.reporter_user,
+            "title" : new_interview.title,
+            "method" : new_interview.method,
+            "body" : new_interview.body,
+            "url" : new_interview.url,
+            "deadline" : new_interview.deadline,
+            "is_send" : new_interview.is_send,
+            "is_expired" : new_interview.is_expired,
         }
         
         return JsonResponse({
@@ -50,29 +61,20 @@ def create_interview(request, id):
 
 def get_interview_all(request):
     if request.method == "GET":
-        
-        token_line = request.META.get('HTTP_AUTHORIZATION')
-        token = get_object_or_404(Token, key=token_line)
-        
         interview_all = Interview.objects.all()
+        
         interview_json_all = []
         
         for interview in interview_all:
-
-            interview_json=interview_json = {
-                "id"            : interview.id,
-                "reporter_user" : interview.reporter_user.profile.name,
-                "is_report"     : token.user.profile.is_report,
-                "expert_name"   : interview.expert_name,
-                "title"         : interview.title,
-                "purpose"       : interview.purpose,
-                "method"        : interview.method,
-                "amount"        : interview.amount,
-                "body"          : interview.body,
-                "url"           : interview.url,
-                "deadline"      : interview.deadline,
-                "is_send"       : interview.is_send,
-                "is_expired"    : interview.is_expired,
+            interview_json={
+                "id" : interview.id,
+                "title" : interview.title,
+                "method" : interview.method,
+                "body" : interview.body,
+                "url" : interview.url,
+                "deadline" : interview.deadline,
+                "is_send" : interview.is_send,
+                "is_expired" : interview.is_expired,
             }
             interview_json_all.append(interview_json)
         
@@ -92,27 +94,18 @@ def get_interview_all(request):
     
 def get_interview(request, id):
     if request.method == "GET":
-
-        token_line = request.META.get('HTTP_AUTHORIZATION')
-        token = get_object_or_404(Token, key=token_line)
-        
         interview= get_object_or_404(Interview, pk=id)
         
-
-        interview_json = {
-            "id"            : interview.id,
-            "reporter_user" : interview.reporter_user.profile.name,
-            "is_report"     : token.user.profile.is_report,
-            "expert_name"   : interview.expert_name,
-            "title"         : interview.title,
-            "purpose"       : interview.purpose,
-            "method"        : interview.method,
-            "amount"        : interview.amount,
-            "body"          : interview.body,
-            "url"           : interview.url,
-            "deadline"      : interview.deadline,
-            "is_send"       : interview.is_send,
-            "is_expired"    : interview.is_expired,
+        interview_json={
+            "id" : interview.id,
+            "title" : interview.title,
+            "method" : interview.method,
+            "body" : interview.body,
+            "url" : interview.url,
+            "deadline" : interview.deadline,
+            "is_send" : interview.is_send,
+            "is_expired" : interview.is_expired,
+            "rest_time" : time_calc(id)
         }
         
         return JsonResponse({
@@ -130,41 +123,31 @@ def get_interview(request, id):
     })
     
 def update_interview(request, id):
-    if request.method == "POST":
-        
-        # 이미지 파일이 있으므로 request에서 구분하여 받기
-        body =  request.POST
-        if request.FILES:
-            file = request.FILES['file']
-        else : file = None
-
+    if request.method == "PATCH":
+        body = json.loads(request.body.decode('utf-8'))
         
         update_interview = get_object_or_404(Interview, pk=id)
-      
+        
         update_interview.title = body['title']
-        update_interview.purpose = body['purpose']
         update_interview.method = body['method']
-        update_interview.amount = body['amount']
         update_interview.body = body['body']
-        update_interview.file = file
         update_interview.url = body['url']
         update_interview.deadline = body['deadline']
-
+        update_interview.is_send = body['is_send']
+        update_interview.is_expired = body=['is_send']
+        update_interview.is_expired = body['is_expired']
+        
         update_interview.save()
         
         update_interview_json = {
-            "id"            : update_interview.id,
-            "reporter_user" : update_interview.reporter_user.profile.name,
-            "expert_name"   : update_interview.expert_name,
-            "title"         : update_interview.title,
-            "purpose"       : update_interview.purpose,
-            "method"        : update_interview.method,
-            "amount"        : update_interview.amount,
-            "body"          : update_interview.body,
-            "url"           : update_interview.url,
-            "deadline"      : update_interview.deadline,
-            "is_send"       : update_interview.is_send,
-            "is_expired"    : update_interview.is_expired,
+            "id" : update_interview.id,
+            "title" : update_interview.title,
+            "method" : update_interview.method,
+            "body" : update_interview.body,
+            "url" : update_interview.url,
+            "deadline" : update_interview.deadline,
+            "is_send" : update_interview.is_send,
+            "is_expired" : update_interview.is_expired,
         }
         
         return JsonResponse({
@@ -202,22 +185,24 @@ def delete_interview(request, id):
 
 # 임시저장 -> 진짜 인터뷰 보내기
 # 이 때는 설정해 둔 deadline과 별개로 따로 시간 counting은 하지 않습니다
-# 인터뷰 제안서가 넘어감과 동시에 create_apply
+# 인터뷰 제안서가 넘어감과 동시에 apply가 생겨요
 # 헤더에 expert 관련 정보를 줘야 합니다
 
 def send_interview(request, interview_id):
-    if request.method == "POST":
+    if request.method == "GET":
         
-        send_interview = get_object_or_404(Interview, pk=interview_id)
+        token_line = request.META.get('HTTP_AUTHORIZATION')
+        token = get_object_or_404(Token, key=token_line)
+        
         
         new_apply = Apply.objects.create(
-            interview = send_interview,
-            expert_user = get_object_or_404(User, pk=send_interview.expert_id),
-            send_date = datetime.now()
+            expert_user = token.user,
+            interview = get_object_or_404(Interview, pk=interview_id),
         )
-
+        
         new_apply_json={
             "id" : new_apply.id,
+            "expert_user" : new_apply.expert_user,
             "send_date" : new_apply.send_date,
             "check_date" : new_apply.check_date,
             "response" : new_apply.response,
@@ -243,7 +228,6 @@ def send_interview(request, interview_id):
 
 
 # expert가 수락/보류/거절 눌렀을 때 checkdate update + response 저장 + hold_reason까지 저장
-# 이때 apply_update
 
 def checked_interview(request, id):
     if request.method == "PATCH":
@@ -257,7 +241,6 @@ def checked_interview(request, id):
             apply.check_date = datetime.now()
             apply.response = body['response']
             apply.hold_reason = body['hold_reason']
-            
             # 프런트에서 공백으로라도 보내주기!!
             
             apply.save()
@@ -278,8 +261,8 @@ def checked_interview(request, id):
             })
 
         return JsonResponse({
-            'status' : 400,
-            'success' : False,
+            'status' : 200,
+            'success' : True,
             'message' : 'is_expired == True',
             'data' : None
         })
@@ -291,36 +274,52 @@ def timedelta2int(td):
     return res
             
         
-# deadline - 현재시간 == 0 : 인터뷰 상태, 응답률, 응답시간 업데이트
+# 시간 카운팅 함수 (제한시간 - 현재시간)
+# 초 단위 출력
 
-def update_reply(request, id):
-    if request.method == "PATCH":
-        interview = get_object_or_404(Interview, pk=id)
+def time_calc(id):
+    interview = get_object_or_404(Interview, pk=id)
     
-        interview.is_expired == 1
-        expert_profile = get_object_or_404(Profile, user=interview.apply.expert_user)
-        expert_profile.reply_rate = reply_rate(expert_profile.user)
-        expert_profile.reply_time = reply_time(expert_profile.user)
+    if interview.is_send == 1:
+        KST = pytz.timezone('Asia/Seoul')
         
-
+        currtime = datetime.now().astimezone(KST)
+        deadline = interview.deadline.astimezone(KST)
+        
+        time = deadline - currtime
+        time = timedelta2int(time)
+        
+        if time < 0 :
+            interview.is_expired = 1
+            # apply = interview.apply
+            # expert_profile = get_object_or_404(Profile, user=apply.expert_user)
+            # expert_profile.reply_rate = reply_rate(apply.expert_user)
+            # expert_profile.save()
+            return 0
+        else:
+            return time
 
 # 평균 응답률 - 전문가에 따름
-# deadline 지난 것들 기준
 
 def reply_rate(id):
    
     expert = get_object_or_404(User, pk=id)
+
     apply_all = Apply.objects.filter(expert_user=expert)
     
     totalNum = 0
     repliedNum = 0
-    
     for apply in apply_all:
         if apply.interview.is_expired == 1:
             totalNum += 1
-
             if apply.response != 0:
                 repliedNum += 1
+
+
+    
+
+        
+        
     
     reply_rate = int(float(repliedNum / totalNum) * 100)
     
@@ -329,24 +328,42 @@ def reply_rate(id):
 
 # 평균 응답 시간 - 전문가에 따름
 # totalTime - 초 단위
-# deadline 지난 것들 기준으로
 
-def reply_time(id):
-    
-    user = get_object_or_404(User, pk=id)
-    apply_all = Apply.objects.filter(expert_user=user)
-    
-    repliedNum = 0
-    totalTime = 0
-    
-    for apply in apply_all:
-        if apply.interview.is_expired == 1:
+def reply_time(request):
+    if request.method == "GET":
+        token_line = request.META.get('HTTP_AUTHORIZATION')
+        token = get_object_or_404(Token, key=token_line)
+        
+        apply_all = Apply.objects.filter(expert_user=token.user)
+        
+        repliedNum = 0
+        totalTime = 0
+        
+        for apply in apply_all:
             if apply.response != 0:
                 repliedNum += 1
                 totalTime += timedelta2int(apply.check_date - apply.send_date)
-    
-    reply_time = (totalTime / repliedNum)/3600
-    
-    return reply_time
+        
+        reply_time = (totalTime / repliedNum)/3600
+        
+        reply_time_json = {
+            "totalNum" : repliedNum,
+            "totalTime" : totalTime,
+            "reply_time" : reply_time,
+        }
+        
+        return JsonResponse({
+            'status' : 200,
+            'success' : True,
+            "message" : "평균응답시간 계산 성공",
+            "data" : reply_time_json
+        })
+        
+    return JsonResponse({
+        'status' : 405,
+        'success' : False,
+        "message" : "method error : reply_time",
+        'data' : None,   
+    })
                 
         

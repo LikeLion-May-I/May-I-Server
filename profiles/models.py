@@ -6,15 +6,25 @@ from django.dispatch import receiver
 # Create your models here.
 User=get_user_model()
 
+# class User(AbstractUser):
+#     #id
+#     #username
+#     #password
+#     log_in = models.DateTimeField(auto_now_add=True)
+#     is_reporter = models.IntegerField(default=1, null=True,  blank=True)
+
+# class MyUser(models.Model):
+#     class meta:
+#         model = get_user_model()
 
     
 class Profile(models.Model):
+    #id
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
-    is_report = models.IntegerField(default = 1, null=True, blank=True)
-    name = models.CharField(default = "May I", max_length=20, null=True, blank=True)
+    name = models.CharField(max_length=20, null=True, blank=True)
     department = models.CharField(max_length=50, null=True, blank=True)
     category_id = models.IntegerField(null=True, blank=True)
-    img = models.ImageField(upload_to="profile/", blank=True, null=True, default='profile/person.png')
+    img = models.CharField(max_length=100, null=True, blank=True)
     background = models.CharField(max_length=50, null=True, blank=True)
     office = models.CharField(max_length=50, null=True, blank=True)
     phone = models.CharField(max_length=20, null=True, blank=True)
@@ -26,8 +36,7 @@ class Profile(models.Model):
     is_email_open = models.IntegerField(default=1, null=True, blank=True)
     is_phone_open = models.IntegerField(default=1, null=True, blank=True)
 
-    def __str__(self):
-        return str(self.user.id) + "/" + self.user.username
+
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
