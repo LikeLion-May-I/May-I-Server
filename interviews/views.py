@@ -1,5 +1,6 @@
 from datetime import datetime
 import json
+from xmlrpc.client import DateTime
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from profiles.models import Profile, User
@@ -98,7 +99,6 @@ def get_interview(request, id):
         interview= get_object_or_404(Interview, pk=id)
         
 
-
         interview_json = {
             "id"            : interview.id,
             "reporter_user" : interview.reporter_user.profile.name,
@@ -130,24 +130,24 @@ def get_interview(request, id):
     })
     
 def update_interview(request, id):
-    if request.method == "PATCH":
+    if request.method == "POST":
+        print(request.body)
         body = json.loads(request.body.decode('utf-8'))
         
         update_interview = get_object_or_404(Interview, pk=id)
         
         if request.FILES:
-            file = request.FILES['file']
-
-        update_interview.title = body['title'],
-        update_interview.purpose = body['purpose'],
-        update_interview.method = body['method'],
-        update_interview.amount = body['amount'],
-        update_interview.body = body['body'],
-        update_interview.file = file,
-        update_interview.url = body['url'],
-        update_interview.deadline = body['deadline'],
-        update_interview.is_send = body['is_send'],
-        update_interview.is_expired = body['is_expired'],
+             update_interview.file = request.FILES['file']
+      
+        update_interview.title = body['title']
+        update_interview.purpose = body['purpose']
+        update_interview.method = body['method']
+        update_interview.amount = body['amount']
+        update_interview.body = body['body']
+       
+        update_interview.url = body['url']
+        update_interview.deadline = body['deadline']
+        
 
         update_interview.save()
         
@@ -212,11 +212,11 @@ def send_interview(request, interview_id):
         new_apply = Apply.objects.create(
             interview = send_interview,
             expert_user = get_object_or_404(User, pk=send_interview.expert_id),
+            send_date = datetime.now()
         )
-        
+
         new_apply_json={
             "id" : new_apply.id,
-            # "expert_user" : new_apply.expert_user,
             "send_date" : new_apply.send_date,
             "check_date" : new_apply.check_date,
             "response" : new_apply.response,

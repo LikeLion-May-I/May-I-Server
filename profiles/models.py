@@ -27,7 +27,6 @@ class Profile(models.Model):
     is_phone_open = models.IntegerField(default=1, null=True, blank=True)
 
 
-
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
