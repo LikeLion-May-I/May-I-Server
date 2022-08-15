@@ -1,1 +1,1 @@
-web: gunicorm may-i-server.wsgi
+web: gunicorm MAY-I-SERVER.wsgi
