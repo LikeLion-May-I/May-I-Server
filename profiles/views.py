@@ -118,7 +118,7 @@ def get_apply_request_all_for_expert(request):
                     "department": sender_profile.department,
                     "title": apply.interview.title,
                     "deadline": apply.interview.deadline,
-                    "status": apply.interview.is_expired
+                    "is_expired": apply.interview.is_expired
                 }
 
                 apply_all_json.append(apply_json)
@@ -156,7 +156,7 @@ def get_apply_answered_all_for_expert(request):
                     "id": apply.id,
                     "department": sender_profile.department,
                     "title": apply.interview.title,
-                    "status": apply.response,
+                    "response": apply.response,
                 }
                 apply_all_json.append(apply_json)
 
@@ -242,7 +242,7 @@ def get_apply_answered_all_for_reporter(request, method_id):
                         "id": interview.apply.id,
                         "name": sender_profile.name,
                         "title": interview.title,
-                        "status": interview.apply.response,
+                        "response": interview.apply.response,
                     }
 
                 interview_all_json.append(apply_json)
@@ -256,7 +256,7 @@ def get_apply_answered_all_for_reporter(request, method_id):
                         "id": interview.apply.id,
                         "name": sender_profile.name,
                         "title": interview.title,
-                        "status": interview.apply.response,
+                        "response": interview.apply.response,
                     }
 
                     interview_all_json.append(apply_json)
