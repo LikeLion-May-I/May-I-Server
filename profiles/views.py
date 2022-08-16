@@ -1,14 +1,11 @@
-from email import header
-from time import time
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from interviews.models import Apply
 
 from profiles.models import Profile
-from django.contrib.auth import get_user_model, authenticate, login, logout
 from interviews.views import *
-from django.utils import timezone
-from datetime import datetime
+
+from django.contrib.auth import authenticate, login, logout
 
 from rest_framework import generics
 from .serializers import RegisterSerializer
@@ -35,13 +32,13 @@ def get_profile_one(request, id):
             "id": profile.id,
             "name": profile.name,
             "department": profile.department,
-            "img": str(profile.img),
+            "img": "/media/"+str(profile.img),
             "background": profile.background,
             "office": profile.office,
             "phone": profile.phone,
             "tag": profile.tag,
-            "reply_rate": profile.reply_rate,
-            "reply_time": profile.reply_time,
+            "reply_rate": reply_rate(id),
+            "reply_time": reply_time(id),
             "certification": profile.certification,
             "update_at": profile.update_at,
             "last_login": profile.user.last_login,
@@ -64,12 +61,6 @@ def get_profile_one(request, id):
 def get_profile_all(request, category_id):
     if request.method == "GET":
 
-        # token_line = request.META.get('HTTP_AUTHORIZATION')
-
-        # # token_line = 너가 원하는 유저의 토큰 스트링으로 넣어두기
-        # token = get_object_or_404(Token, key=token_line)
-        # print(token.user.id)
-
         profile_all = Profile.objects.filter(category_id=category_id)
 
         profile_all_json = []
@@ -79,10 +70,10 @@ def get_profile_all(request, category_id):
                 "id": profile.id,
                 "name": profile.name,
                 "department": profile.department,
-                "img": str(profile.img),
+                "img": "/media/"+str(profile.img),
                 "tag": profile.tag,
-                "reply_rate": profile.reply_rate,
-                "reply_time": profile.reply_time,
+                "reply_rate": reply_rate(profile.id),
+                "reply_time": reply_time(profile.id),
                 "certification": profile.certification,
                 "update_at": profile.update_at,
                 "last_login": profile.user.last_login,
@@ -103,17 +94,6 @@ def get_profile_all(request, category_id):
         "message": "method error",
         "data": None
     })
-
-# def time_calc_2(interview):
-
-#     if interview.is_send == 1:
-#         currtime = datetime.now(timezone('Asia/Seoul')).replace(tzinfo=None)
-#         time = interview.deadline - currtime
-
-#         if time.minutes > 0:
-#             interview.is_expired = 1
-#         else:
-#             return time
 
 
 def get_apply_request_all_for_expert(request):
@@ -137,7 +117,7 @@ def get_apply_request_all_for_expert(request):
                     "id": apply.id,
                     "department": sender_profile.department,
                     "title": apply.interview.title,
-                    # "deadline": time_calc_2(apply.interview),
+                    "deadline": apply.interview.deadline,
                     "status": apply.interview.is_expired
                 }
 
@@ -159,9 +139,6 @@ def get_apply_request_all_for_expert(request):
 
 def get_apply_answered_all_for_expert(request):
     if request.method == "GET":
-
-        # user = authenticate(username="sanbo", password="userexpert")
-        # login(request, user)
 
         token_line = request.META.get('HTTP_AUTHORIZATION')
 
@@ -236,6 +213,24 @@ def get_apply_one_for_expert(request, id):
 #######################drf#############################
 #######################################################
 
+def logout(request):
+    token_line = request.META.get('HTTP_AUTHORIZATION')
+    token = get_object_or_404(Token, key=token_line)
+    if token.user.is_authenticated:
+        # logout(request)
+        return JsonResponse({
+            'status' : 200,
+            'success' : True,
+            'message' : '로그아웃 성공!',
+            
+        })
+    return JsonResponse({
+        'status' : 400,
+        'success' : False,
+        'message' : '이미 로그아웃 되었습니다!',
+        
+    })
+
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -250,7 +245,8 @@ class LoginView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         token = serializer.validated_data
-        return Response({"token": token.key}, status=status.HTTP_200_OK)
+        login(request, token.user)
+        return Response({"token": token.key, "profile_name":token.user.profile.name }, status=status.HTTP_200_OK)
 
 
 class ProfileView(generics.GenericAPIView):
