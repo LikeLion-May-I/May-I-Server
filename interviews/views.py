@@ -299,8 +299,23 @@ def update_reply(request, id):
     
         interview.is_expired == 1
         expert_profile = get_object_or_404(Profile, user=interview.apply.expert_user)
-        expert_profile.reply_rate = reply_rate(expert_profile.user)
-        expert_profile.reply_time = reply_time(expert_profile.user)
+        expert_profile.reply_rate = reply_rate(expert_profile.user.id)
+        expert_profile.reply_time = reply_time(expert_profile.user.id)
+        
+        expert_profile.save()
+
+        reply_json = {
+            "expert_id" : expert_profile.user.id,
+            "reply_rate" : expert_profile.reply_rate,
+            "reply_time" : expert_profile.reply_time, 
+        }
+        
+        return JsonResponse({
+            'status' : 200,
+            'success' : True,
+            'message' : 'update-reply 성공',
+            'data' : reply_json
+        })
         
 
 
@@ -321,8 +336,11 @@ def reply_rate(id):
 
             if apply.response != 0:
                 repliedNum += 1
-    
-    reply_rate = int(float(repliedNum / totalNum) * 100)
+                
+    if totalNum != 0:
+        reply_rate = int(float(repliedNum / totalNum) * 100)
+    else:
+        reply_rate = -1
     
     return reply_rate
 
@@ -345,7 +363,10 @@ def reply_time(id):
                 repliedNum += 1
                 totalTime += timedelta2int(apply.check_date - apply.send_date)
     
-    reply_time = (totalTime / repliedNum)/3600
+    if repliedNum != 0:
+        reply_time = (totalTime / repliedNum)/3600
+    else:
+        reply_time = -1
     
     return reply_time
                 
