@@ -20,7 +20,7 @@ class Profile(models.Model):
     phone = models.CharField(max_length=20, null=True, blank=True)
     tag = models.CharField(max_length=100, null=True, blank=True)
     reply_rate = models.IntegerField(null=True, blank=True)
-    reply_time = models.DateTimeField(auto_now_add=True)
+    reply_time = models.IntegerField(null=True, blank=True)
     certification = models.IntegerField(default=0, null=True, blank=True)
     update_at = models.DateTimeField(auto_now=True)
     is_email_open = models.IntegerField(default=1, null=True, blank=True)
