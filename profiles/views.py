@@ -149,7 +149,7 @@ def get_apply_answered_all_for_expert(request):
         apply_all_json = []
 
         for apply in apply_all:
-            if apply.response > 0:
+            if apply.response > 0 or apply.interview.is_expired == 1:
                 sender_profile = get_object_or_404(Profile, user=apply.interview.reporter_user)
 
                 apply_json = {
@@ -157,6 +157,7 @@ def get_apply_answered_all_for_expert(request):
                     "department": sender_profile.department,
                     "title": apply.interview.title,
                     "response": apply.response,
+                    "is_expired": apply.interview.is_expired
                 }
                 apply_all_json.append(apply_json)
 
@@ -180,6 +181,7 @@ def get_apply_request_all_for_reporter(request):
 
         token_line = request.META.get('HTTP_AUTHORIZATION')
 
+
         token = get_object_or_404(Token, key=token_line)
 
         interview_all = Interview.objects.filter(reporter_user=token.user)
@@ -191,12 +193,12 @@ def get_apply_request_all_for_reporter(request):
         for interview in interview_all:
 
             if interview.apply.response == 0:
-                if interview.is_expired != 0:
+                if interview.is_expired == 0:
 
                     sender_profile = get_object_or_404(Profile, user=interview.apply.expert_user)
 
                     apply_json = {
-                        "id": interview.apply.id,
+                        "id": interview.id,
                         "name": sender_profile.name,
                         "title": interview.title,
                         "deadline": interview.deadline,
@@ -219,7 +221,7 @@ def get_apply_request_all_for_reporter(request):
         "data": None
     })
 
-def get_apply_answered_all_for_reporter(request, method_id):
+def get_apply_answered_all_for_reporter(request):
     #method_id == 1 -> 수락 / == 2 -> 보류 / == 3 -> 거절 / == 4 -> 만료
     if request.method == "GET":
 
@@ -233,33 +235,20 @@ def get_apply_answered_all_for_reporter(request, method_id):
     
         #apply_all_json = []
 
-        if method_id == 4:
-            for interview in interview_all:
-                if interview.is_expired == 1:
-                    sender_profile = get_object_or_404(Profile, user=interview.apply.expert_user)
+        for interview in interview_all:
+            if interview.is_expired == 1 or interview.apply.response > 0:
+                sender_profile = get_object_or_404(Profile, user=interview.apply.expert_user)
 
-                    apply_json = {
-                        "id": interview.apply.id,
-                        "name": sender_profile.name,
-                        "title": interview.title,
-                        "response": interview.apply.response,
-                    }
+                apply_json = {
+                    "id": interview.apply.id,
+                    "name": sender_profile.name,
+                    "title": interview.title,
+                    "response": interview.apply.response,
+                    "is_expired": interview.is_expired
+                    
+                }
 
                 interview_all_json.append(apply_json)
-        else:
-            for interview in interview_all:
-                    
-                if interview.apply.response == method_id:
-                    sender_profile = get_object_or_404(Profile, user=interview.apply.expert_user)
-
-                    apply_json = {
-                        "id": interview.apply.id,
-                        "name": sender_profile.name,
-                        "title": interview.title,
-                        "response": interview.apply.response,
-                    }
-
-                    interview_all_json.append(apply_json)
 
         return JsonResponse({
             'status' : 200,
