@@ -11,7 +11,7 @@ class Interview(models.Model):
     purpose = models.CharField(max_length=50, null=True, blank=True)
     method = models.IntegerField(null=True, blank=True)
     amount = models.CharField(max_length=20, null=True, blank=True)
-    body = models.CharField(max_length=500, null=True, blank=True)
+    body = models.TextField(null=True, blank=True)
     file = models.FileField(upload_to="interview/", blank=True, null=True)
     url = models.URLField(max_length=500, null=True, blank=True)
     deadline = models.DateTimeField(null=True, blank=True)
