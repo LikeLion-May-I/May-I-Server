@@ -96,7 +96,7 @@ def get_profile_all(request, category_id):
     })
 
 
-def get_apply_request_all_for_expert(request):
+def get_apply_list_for_expert(request):
     if request.method == "GET":
 
         token_line = request.META.get('HTTP_AUTHORIZATION')
@@ -105,15 +105,15 @@ def get_apply_request_all_for_expert(request):
 
         apply_all = Apply.objects.filter(expert_user=token.user)
     
-        apply_all_json = []
+        request_json = []
 
+        answered_json = []
+        
         for apply in apply_all:
 
-            if apply.response == 0:
+            sender_profile = get_object_or_404(Profile, user=apply.interview.reporter_user)
 
-                sender_profile = get_object_or_404(Profile, user=apply.interview.reporter_user)
-
-                apply_json = {
+            apply_json = {
                     "id": apply.id,
                     "department": sender_profile.department,
                     "title": apply.interview.title,
@@ -121,13 +121,17 @@ def get_apply_request_all_for_expert(request):
                     "is_expired": apply.interview.is_expired
                 }
 
-                apply_all_json.append(apply_json)
+            if apply.response == 0:
+                request_json.append(apply_json)
+
+            elif apply.response > 0 or apply.interview.is_expired == 1:
+                answered_json.append(apply_json)
 
         return JsonResponse({
             'status' : 200,
             'success' : True,
             'message' : '전문가 마이페이지 요청 인터뷰 불러오기 성공 !',
-            'data' : apply_all_json
+            'data' : [ request_json, answered_json ]
         })
 
     return JsonResponse({
@@ -137,50 +141,49 @@ def get_apply_request_all_for_expert(request):
         "data": None
     })
 
-def get_apply_answered_all_for_expert(request):
-    if request.method == "GET":
+# def get_apply_answered_all_for_expert(request):
+#     if request.method == "GET":
 
-        token_line = request.META.get('HTTP_AUTHORIZATION')
+#         token_line = request.META.get('HTTP_AUTHORIZATION')
 
-        token = get_object_or_404(Token, key=token_line)
+#         token = get_object_or_404(Token, key=token_line)
 
-        apply_all = Apply.objects.filter(expert_user=token.user)
+#         apply_all = Apply.objects.filter(expert_user=token.user)
     
-        apply_all_json = []
+#         apply_all_json = []
 
-        for apply in apply_all:
-            if apply.response > 0 or apply.interview.is_expired == 1:
-                sender_profile = get_object_or_404(Profile, user=apply.interview.reporter_user)
+#         for apply in apply_all:
+#             if apply.response > 0 or apply.interview.is_expired == 1:
+#                 sender_profile = get_object_or_404(Profile, user=apply.interview.reporter_user)
 
-                apply_json = {
-                    "id": apply.id,
-                    "department": sender_profile.department,
-                    "title": apply.interview.title,
-                    "response": apply.response,
-                    "is_expired": apply.interview.is_expired
-                }
-                apply_all_json.append(apply_json)
+#                 apply_json = {
+#                     "id": apply.id,
+#                     "department": sender_profile.department,
+#                     "title": apply.interview.title,
+#                     "response": apply.response,
+#                     "is_expired": apply.interview.is_expired
+#                 }
+#                 apply_all_json.append(apply_json)
 
-        return JsonResponse({
-            'status' : 200,
-            'success' : True,
-            'message' : '전문가 마이페이지 인터뷰 현황 불러오기 성공 !',
-            'data' : apply_all_json
-        })
+#         return JsonResponse({
+#             'status' : 200,
+#             'success' : True,
+#             'message' : '전문가 마이페이지 인터뷰 현황 불러오기 성공 !',
+#             'data' : apply_all_json
+#         })
 
-    return JsonResponse({
-        "status": 405,
-        "success" : False,
-        "message": "method error",
-        "data": None
-    })
+#     return JsonResponse({
+#         "status": 405,
+#         "success" : False,
+#         "message": "method error",
+#         "data": None
+#     })
 
 
-def get_apply_request_all_for_reporter(request):
+def get_apply_list_for_reporter(request):
     if request.method == "GET":
 
         token_line = request.META.get('HTTP_AUTHORIZATION')
-
 
         token = get_object_or_404(Token, key=token_line)
 
@@ -188,16 +191,14 @@ def get_apply_request_all_for_reporter(request):
 
         # apply_all = Apply.objects.filter(interview=token.user)
     
-        interview_all_json = []
+        request_json = []
+        answered_json = []
 
         for interview in interview_all:
 
-            if interview.apply.response == 0:
-                if interview.is_expired == 0:
+            sender_profile = get_object_or_404(Profile, user=interview.apply.expert_user)
 
-                    sender_profile = get_object_or_404(Profile, user=interview.apply.expert_user)
-
-                    apply_json = {
+            apply_json = {
                         "id": interview.id,
                         "name": sender_profile.name,
                         "title": interview.title,
@@ -205,13 +206,19 @@ def get_apply_request_all_for_reporter(request):
                         "is_send": interview.is_send,
                     }
 
-                    interview_all_json.append(apply_json)
+            if interview.apply.response == 0:
+                if interview.is_expired == 0:
+                    request_json.append(apply_json)
+
+            elif interview.is_expired == 1 or interview.apply.response > 0:
+                answered_json.append(apply_json)
+
 
         return JsonResponse({
             'status' : 200,
             'success' : True,
             'message' : '리포터 마이페이지 요청 인터뷰 불러오기 성공 !',
-            'data' : interview_all_json
+            'data' : [ request_json, answered_json ]
         })
 
     return JsonResponse({
@@ -221,48 +228,48 @@ def get_apply_request_all_for_reporter(request):
         "data": None
     })
 
-def get_apply_answered_all_for_reporter(request):
-    #method_id == 1 -> 수락 / == 2 -> 보류 / == 3 -> 거절 / == 4 -> 만료
-    if request.method == "GET":
+# def get_apply_answered_all_for_reporter(request):
+#     #method_id == 1 -> 수락 / == 2 -> 보류 / == 3 -> 거절 / == 4 -> 만료
+#     if request.method == "GET":
 
-        token_line = request.META.get('HTTP_AUTHORIZATION')
+#         token_line = request.META.get('HTTP_AUTHORIZATION')
 
-        token = get_object_or_404(Token, key=token_line)
+#         token = get_object_or_404(Token, key=token_line)
 
-        interview_all = Interview.objects.filter(reporter_user=token.user)
+#         interview_all = Interview.objects.filter(reporter_user=token.user)
 
-        interview_all_json = []
+#         interview_all_json = []
     
-        #apply_all_json = []
+#         #apply_all_json = []
 
-        for interview in interview_all:
-            if interview.is_expired == 1 or interview.apply.response > 0:
-                sender_profile = get_object_or_404(Profile, user=interview.apply.expert_user)
+#         for interview in interview_all:
+#             if interview.is_expired == 1 or interview.apply.response > 0:
+#                 sender_profile = get_object_or_404(Profile, user=interview.apply.expert_user)
 
-                apply_json = {
-                    "id": interview.apply.id,
-                    "name": sender_profile.name,
-                    "title": interview.title,
-                    "response": interview.apply.response,
-                    "is_expired": interview.is_expired
+#                 apply_json = {
+#                     "id": interview.apply.id,
+#                     "name": sender_profile.name,
+#                     "title": interview.title,
+#                     "response": interview.apply.response,
+#                     "is_expired": interview.is_expired
                     
-                }
+#                 }
 
-                interview_all_json.append(apply_json)
+#                 interview_all_json.append(apply_json)
 
-        return JsonResponse({
-            'status' : 200,
-            'success' : True,
-            'message' : '리포터 마이페이지 인터뷰 현황 불러오기 성공 !',
-            'data' : interview_all_json
-        })
+#         return JsonResponse({
+#             'status' : 200,
+#             'success' : True,
+#             'message' : '리포터 마이페이지 인터뷰 현황 불러오기 성공 !',
+#             'data' : interview_all_json
+#         })
 
-    return JsonResponse({
-        "status": 405,
-        "success" : False,
-        "message": "method error",
-        "data": None
-    })
+#     return JsonResponse({
+#         "status": 405,
+#         "success" : False,
+#         "message": "method error",
+#         "data": None
+#     })
 
 # def get_apply_one_for_expert(request, id):
 
