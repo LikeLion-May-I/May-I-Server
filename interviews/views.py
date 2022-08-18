@@ -298,7 +298,7 @@ def update_reply(request, id):
     if request.method == "PATCH":
         interview = get_object_or_404(Interview, pk=id)
     
-        interview.is_expired == 1
+        interview.is_expired = 1
         expert_profile = get_object_or_404(Profile, user=interview.apply.expert_user)
         expert_profile.reply_rate = reply_rate(expert_profile.user.id)
         expert_profile.reply_time = reply_time(expert_profile.user.id)
