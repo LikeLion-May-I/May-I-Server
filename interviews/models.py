@@ -19,8 +19,8 @@ class Interview(models.Model):
     is_expired = models.IntegerField(default=0, null=True, blank=True)
     expert_id = models.IntegerField(null=True, blank=True)
 
-    def __str__(self):
-        return self.reporter_user.profile.name + " -> " + self.expert_name
+    # def __str__(self):
+    #     return self.reporter_user.profile.name + " -> " + self.expert_name
 
 class Apply(models.Model):
     expert_user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
