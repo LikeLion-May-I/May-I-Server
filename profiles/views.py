@@ -68,6 +68,7 @@ def get_profile_all(request, category_id):
         for profile in profile_all:
             profile_json = {
                 "id": profile.id,
+                "is_report" : profile.is_report,
                 "name": profile.name,
                 "department": profile.department,
                 "img": "/media/"+str(profile.img),
