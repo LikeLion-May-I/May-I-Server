@@ -118,7 +118,8 @@ def get_apply_list_for_expert(request):
                     "department": sender_profile.department,
                     "title": apply.interview.title,
                     "deadline": apply.interview.deadline,
-                    "is_expired": apply.interview.is_expired
+                    "is_expired": apply.interview.is_expired,
+                    "response": apply.response
                 }
 
             if apply.response == 0:
@@ -204,6 +205,7 @@ def get_apply_list_for_reporter(request):
                         "title": interview.title,
                         "deadline": interview.deadline,
                         "is_send": interview.is_send,
+                        "response": interview.apply.response,
                     }
 
             if interview.apply.response == 0:
