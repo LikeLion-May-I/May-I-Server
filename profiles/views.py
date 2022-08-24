@@ -206,6 +206,7 @@ def get_apply_list_for_reporter(request):
                         "title": interview.title,
                         "deadline": interview.deadline,
                         "is_send": interview.is_send,
+                        "is_expired": interview.is_expired,
                         "response": interview.apply.response,
                     }
 
