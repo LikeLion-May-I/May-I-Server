@@ -8,7 +8,6 @@ urlpatterns = [
     path('register/', RegisterView.as_view()),
     path('login/', LoginView.as_view()),
     path('logout/', logout, name="logout"),
-    path('get-apply-request-all-for-expert/', get_apply_request_all_for_expert, name='get_apply_request_all_for_expert'),
-    path('get-apply-answered-all-for-expert/', get_apply_answered_all_for_expert, name='get_apply_answered_all_for_expert'),
-    path('get-apply-one-for-expert/<int:id>/', get_apply_one_for_expert, name='get-apply-one-for-expert'),
+    path('get-apply-list-for-expert/', get_apply_list_for_expert, name='get_apply_request_all_for_expert'),
+    path('get-apply-list-for-reporter/', get_apply_list_for_reporter, name='get_apply_request_all_for_reporter'),    
 ]

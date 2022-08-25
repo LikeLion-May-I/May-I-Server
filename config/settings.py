@@ -11,10 +11,13 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
 from pathlib import Path
+from shelve import DbfilenameShelf
 from django.core.exceptions import ImproperlyConfigured
 import os, json, environ
 import dj_database_url
 
+
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,28 +29,29 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 
-# secret_file = os.path.join(BASE_DIR, 'secrets.json') # secrets.json 파일 위치를 명시
+secret_file = os.path.join(BASE_DIR, 'secrets.json') # secrets.json 파일 위치를 명시
 
-# with open(secret_file) as f:
-#     secrets = json.loads(f.read())
+if os.path.isfile(secret_file):
 
-# def get_secret(setting, secrets=secrets):
-#     try:
-#         return secrets[setting]
-#     except KeyError:
-#         error_msg = "Set the {} environment variable".format(setting)
-#         raise ImproperlyConfigured(error_msg)
+    with open(secret_file) as f:
+        secrets = json.loads(f.read())
 
-# SECRET_KEY = get_secret("SECRET_KEY")
+    def get_secret(setting, secrets=secrets):
+        try:
+            return secrets[setting]
+        except KeyError:
+            error_msg = "Set the {} environment variable".format(setting)
+            raise ImproperlyConfigured(error_msg)
 
-# SECURITY WARNING: keep the secret key used in production secret!
+    # SECURITY WARNING: keep the secret key used in production secret!
+    SECRET_KEY = get_secret("SECRET_KEY")
 
-# SECRET_KEY = get_secret("SECRET_KEY")
+else:
+    env = environ.Env()
+    environ.Env.read_env()
+    SECRET_KEY = os.environ.get("SECRET_KEY")
+    
 
-
-env = environ.Env()
-environ.Env.read_env()
-SECRET_KEY = os.environ.get('secret_key')
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -76,13 +80,18 @@ PROJECT_APPS = [
 THIRD_PARTY_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
+    'corsheaders',
 
 ]
+
+CORS_ORIGIN_WHITELIST = ['https://127.0.0.1:5500']
+CORS_ALLOW_CREDENTIALS = True
 
 
 INSTALLED_APPS = DJANGO_APPS + PROJECT_APPS + THIRD_PARTY_APPS
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware', 
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

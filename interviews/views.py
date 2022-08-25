@@ -105,6 +105,7 @@ def get_interview(request, id):
             "is_report"     : token.user.profile.is_report,
             "expert_name"   : interview.expert_name,
             "title"         : interview.title,
+            "department": interview.reporter_user.profile.department,
             "purpose"       : interview.purpose,
             "method"        : interview.method,
             "amount"        : interview.amount,
@@ -296,12 +297,12 @@ def timedelta2int(td):
 def update_reply(request, id):
     if request.method == "PATCH":
         interview = get_object_or_404(Interview, pk=id)
-    
-        interview.is_expired == 1
+        interview.is_expired = 1
+        interview.save()
+
         expert_profile = get_object_or_404(Profile, user=interview.apply.expert_user)
         expert_profile.reply_rate = reply_rate(expert_profile.user.id)
         expert_profile.reply_time = reply_time(expert_profile.user.id)
-        
         expert_profile.save()
 
         reply_json = {

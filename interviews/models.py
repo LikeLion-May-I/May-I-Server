@@ -11,13 +11,16 @@ class Interview(models.Model):
     purpose = models.CharField(max_length=50, null=True, blank=True)
     method = models.IntegerField(null=True, blank=True)
     amount = models.CharField(max_length=20, null=True, blank=True)
-    body = models.CharField(max_length=500, null=True, blank=True)
+    body = models.TextField(null=True, blank=True)
     file = models.FileField(upload_to="interview/", blank=True, null=True)
     url = models.URLField(max_length=500, null=True, blank=True)
     deadline = models.DateTimeField(null=True, blank=True)
     is_send = models.IntegerField(default=0, null=True, blank=True)
     is_expired = models.IntegerField(default=0, null=True, blank=True)
     expert_id = models.IntegerField(null=True, blank=True)
+
+    # def __str__(self):
+    #     return self.reporter_user.profile.name + " -> " + self.expert_name
 
 class Apply(models.Model):
     expert_user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
