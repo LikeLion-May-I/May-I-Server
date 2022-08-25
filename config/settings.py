@@ -29,20 +29,25 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 secret_file = os.path.join(BASE_DIR, 'secrets.json') # secrets.json 파일 위치를 명시
 
-with open(secret_file) as f:
-    secrets = json.loads(f.read())
+if os.path.isfile(secret_file):
 
-def get_secret(setting, secrets=secrets):
-    try:
-        return secrets[setting]
-    except KeyError:
-        error_msg = "Set the {} environment variable".format(setting)
-        raise ImproperlyConfigured(error_msg)
+    with open(secret_file) as f:
+        secrets = json.loads(f.read())
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = get_secret("SECRET_KEY")
+    def get_secret(setting, secrets=secrets):
+        try:
+            return secrets[setting]
+        except KeyError:
+            error_msg = "Set the {} environment variable".format(setting)
+            raise ImproperlyConfigured(error_msg)
 
+    # SECURITY WARNING: keep the secret key used in production secret!
+    SECRET_KEY = get_secret("SECRET_KEY")
 
+else:
+    
+    SECRET_KEY = os.environ.get("SECRET_KEY")
+    
 
 
 
