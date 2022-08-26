@@ -105,7 +105,7 @@ def get_interview(request, id):
             "is_report"     : token.user.profile.is_report,
             "expert_name"   : interview.expert_name,
             "title"         : interview.title,
-            "department": interview.reporter_user.profile.department,
+            "department"    : interview.reporter_user.profile.department,
             "purpose"       : interview.purpose,
             "method"        : interview.method,
             "amount"        : interview.amount,
@@ -114,6 +114,7 @@ def get_interview(request, id):
             "deadline"      : interview.deadline,
             "is_send"       : interview.is_send,
             "is_expired"    : interview.is_expired,
+            "file"          : "/media/" + str(interview.file),
         }
         
         return JsonResponse({
