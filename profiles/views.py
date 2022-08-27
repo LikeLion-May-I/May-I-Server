@@ -115,7 +115,7 @@ def get_apply_list_for_expert(request):
             sender_profile = get_object_or_404(Profile, user=apply.interview.reporter_user)
 
             apply_json = {
-                    "id": apply.id,
+                    "id": apply.interview.id,
                     "department": sender_profile.department,
                     "title": apply.interview.title,
                     "deadline": apply.interview.deadline,
